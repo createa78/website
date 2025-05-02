@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小手拌拌 線上點餐單</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 自訂樣式 */
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f7fafc;
+        }
+        .menu-card {
+            max-width: 750px; /* 稍微再加寬 */
+            margin: 2rem auto;
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+        .menu-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px dashed #cbd5e0;
+            padding-bottom: 1rem;
+        }
+        .menu-header h2 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #c53030; /* 紅色系 */
+        }
+        .menu-section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3748; /* 深灰色 */
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0; /* 增加上下 padding */
+            color: #4a5568; /* 項目文字顏色 */
+            font-size: 0.95rem;
+            border-bottom: 1px dotted #e2e8f0; /* 細點分隔線 */
+        }
+        .menu-item:last-child {
+             border-bottom: none;
+        }
+        .item-details {
+            flex-grow: 1;
+            margin-right: 1rem;
+        }
+        .item-name {
+           display: block;
+           margin-bottom: 0.1rem;
+           font-weight: 500; /* 品項名稱稍粗 */
+        }
+        .item-note {
+            font-size: 0.8rem;
+            color: #718096; /* 備註顏色 */
+        }
+        .item-pricing {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        .item-price {
+            font-weight: 500;
+            color: #718096; /* 價格顏色 */
+            margin-right: 1rem; /* 價格右邊距加大 */
+            min-width: 60px; /* 價格最小寬度 */
+            text-align: right;
+        }
+        .item-quantity {
+            display: flex;
+            align-items: center;
+        }
+        .item-quantity button {
+            background-color: #e2e8f0; /* 淺灰背景 */
+            color: #4a5568; /* 深灰文字 */
+            border: none;
+            width: 28px; /* 按鈕寬度 */
+            height: 28px; /* 按鈕高度 */
+            font-size: 1.1rem; /* 字體大小 */
+            font-weight: bold;
+            border-radius: 0.375rem; /* 圓角 */
+            cursor: pointer;
+            transition: background-color 0.2s; /* 過渡效果 */
+            line-height: 1; /* 確保文字垂直置中 */
+            padding: 0;
+        }
+        .item-quantity button:hover {
+            background-color: #cbd5e0; /* 滑鼠懸停效果 */
+        }
+        .item-quantity input {
+            width: 3.5rem; /* 輸入框寬度 */
+            padding: 0.25rem 0.5rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 0.375rem;
+            text-align: center;
+            font-size: 0.9rem;
+            margin: 0 0.3rem; /* 左右邊距 */
+            -moz-appearance: textfield;
+        }
+        .item-quantity input::-webkit-outer-spin-button,
+        .item-quantity input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .special-option-label {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+        .special-option-label input[type="checkbox"] {
+            margin-right: 0.5rem;
+            accent-color: #c53030; /* 核取方塊顏色 */
+        }
+        .special-option-price {
+            font-weight: 500;
+            color: #dd6b20; /* 橘色系 */
+            margin-left: 1rem;
+        }
+        .total-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px dashed #cbd5e0;
+            text-align: right;
+        }
+        .total-section p {
+            font-size: 1.25rem; /* 總計字體加大 */
+            font-weight: 700; /* 總計字體加粗 */
+            color: #2d3748; /* 深灰色 */
+        }
+        .total-section span {
+            color: #c53030; /* 總計金額顏色 */
+            margin-left: 1rem;
+        }
+        .menu-footer {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: #a0aec0;
+            padding-top: 1rem;
+        }
+        .qr-code-info {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #edf2f7; /* 更淺的灰色背景 */
+            border-radius: 0.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+        .qr-code-info h4 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+        }
+        .qr-code-info a {
+            color: #c53030;
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="menu-card">
+        <div class="menu-header">
+            <h2>🇰🇷 小手拌拌 線上點餐單 🇰🇷</h2>
+        </div>
+
+        <div class="menu-section">
+            <h3>🍚 招牌拌飯 Bibimbap</h3>
+            <ul>
+                <li class="menu-item" data-price="150">
+                    <div class="item-details">
+                        <span class="item-name">牛牛韓式拌飯</span>
+                    </div>
+                    <div class="item-pricing">
+                        <span class="item-price">$150元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="牛牛韓式拌飯 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                <li class="menu-item" data-price="140">
+                    <div class="item-details">
+                         <span class="item-name">豬豬韓式拌飯</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$140元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="豬豬韓式拌飯 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                 <li class="menu-item" data-price="150">
+                    <div class="item-details">
+                        <span class="item-name">豬豬烤肉拌飯</span>
+                        <span class="item-note">(附烤肉醬)</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$150元</span>
+                        <div class="item-quantity">
+                           <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                           <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="豬豬烤肉拌飯 數量">
+                           <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                 <li class="menu-item" data-price="140">
+                    <div class="item-details">
+                        <span class="item-name">咕咕雞韓式拌飯</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$140元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="咕咕雞韓式拌飯 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                 <li class="menu-item" data-price="115">
+                     <div class="item-details">
+                        <span class="item-name">兒童拌飯</span>
+                         <span class="item-note">(可選：雞、豬、牛)</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$115元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="兒童拌飯 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="menu-section">
+            <h3>🍲 暖心鍋物 & 湯品 Soup & Stew</h3>
+             <ul>
+                <li class="menu-item" data-price="160">
+                     <div class="item-details">
+                        <span class="item-name">泡菜豆腐鍋</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$160元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="泡菜豆腐鍋 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                <li class="menu-item" data-price="45">
+                     <div class="item-details">
+                        <span class="item-name">泡菜豆腐湯</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$45元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="泡菜豆腐湯 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="menu-section">
+            <h3>🍜 麵飯主食 Noodles & Rice</h3>
+             <ul>
+                <li class="menu-item" data-price="125">
+                     <div class="item-details">
+                        <span class="item-name">韓式炸醬麵</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$125元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="韓式炸醬麵 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                <li class="menu-item" data-price="105">
+                     <div class="item-details">
+                        <span class="item-name">雜菜冬粉</span>
+                         <span class="item-note">(Japchae)</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$105元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="雜菜冬粉 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+         <div class="menu-section">
+            <h3>🍙 特色飯捲 Gimbap</h3>
+             <ul>
+                <li class="menu-item" data-price="125">
+                     <div class="item-details">
+                        <span class="item-name">燒肉飯捲</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$125元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="燒肉飯捲 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                <li class="menu-item" data-price="135">
+                     <div class="item-details">
+                        <span class="item-name">牛肉飯捲</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$135元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="牛肉飯捲 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                 <li class="menu-item" data-price="135">
+                     <div class="item-details">
+                        <span class="item-name">火腿起司飯捲</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$135元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="火腿起司飯捲 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                 <li class="menu-item" data-price="125">
+                     <div class="item-details">
+                        <span class="item-name">椒鹽雞飯捲</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$125元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="椒鹽雞飯捲 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                 <li class="menu-item" data-price="160">
+                     <div class="item-details">
+                        <span class="item-name">炸蝦飯捲</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$160元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="炸蝦飯捲 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                 <li class="menu-item" data-price="20"> <div class="item-details">
+                         <label class="special-option-label">
+                            <input type="checkbox" id="no-rice-roll-checkbox" onchange="updateTotal()">
+                            <span>✨ 無飯蛋捲 <span class="item-note">(無澱粉)</span></span>
+                         </label>
+                    </div>
+                     <div class="item-pricing">
+                         <span class="special-option-price">加 $20元</span>
+                         </div>
+                </li>
+            </ul>
+        </div>
+
+         <div class="menu-section">
+            <h3>🍤 風味小點 & 單點 Side Dishes & A La Carte</h3>
+             <ul>
+                <li class="menu-item" data-price="35">
+                     <div class="item-details">
+                        <span class="item-name">麻藥鳥蛋</span>
+                        <span class="item-note">(5顆)</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$35元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="麻藥鳥蛋 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                <li class="menu-item" data-price="100">
+                     <div class="item-details">
+                        <span class="item-name">魚板串</span>
+                         <span class="item-note">(3串)</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$100元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="魚板串 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                 <li class="menu-item" data-price="110">
+                     <div class="item-details">
+                        <span class="item-name">海鮮煎餅</span>
+                         <span class="item-note">(Haemul Pajeon)</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$110元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="海鮮煎餅 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                 <li class="menu-item" data-price="15">
+                     <div class="item-details">
+                        <span class="item-name">各式小菜</span>
+                         <span class="item-note">(單碟)</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$15元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="各式小菜 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                 <li class="menu-item" data-price="18">
+                     <div class="item-details">
+                        <span class="item-name">泡菜</span>
+                         <span class="item-note">(單碟 Kimchi)</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$18元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="泡菜 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                 <li class="menu-item" data-price="15">
+                     <div class="item-details">
+                        <span class="item-name">白飯</span>
+                         <span class="item-note">(單碗)</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$15元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="白飯 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="menu-section">
+            <h3>🧂 特製醬料 Sauces</h3>
+             <ul>
+                <li class="menu-item" data-price="25">
+                     <div class="item-details">
+                        <span class="item-name">拌飯醬</span>
+                         <span class="item-note">(Bibimbap Sauce)</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$25元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="拌飯醬 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+                <li class="menu-item" data-price="18">
+                     <div class="item-details">
+                        <span class="item-name">魚板醬</span>
+                         <span class="item-note">(Fish Cake Sauce)</span>
+                    </div>
+                     <div class="item-pricing">
+                        <span class="item-price">$18元</span>
+                        <div class="item-quantity">
+                            <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                            <input type="number" min="0" value="0" onchange="updateTotal()" aria-label="魚板醬 數量">
+                            <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="total-section">
+            <p>總計金額: <span id="total-amount">$0元</span></p>
+            </div>
+
+         <div class="qr-code-info">
+            <h4>如何取得此點餐頁面的 QR Code？</h4>
+            <p>
+                1. 將此 HTML 程式碼儲存為一個 `.html` 檔案 (例如 `order.html`)。<br>
+                2. 將此檔案上傳到網頁空間 (例如 GitHub Pages, Netlify, Vercel 或您自己的伺服器) 以取得公開的網址 (URL)。<br>
+                3. 使用線上 QR Code 產生器 (例如 <a href="https://www.the-qrcode-generator.com/" target="_blank">QR Code Generator</a> 或 <a href="https://qr.io/" target="_blank">QR.io</a>)，將您的網址貼上即可產生 QR Code。
+            </p>
+            <p class="mt-2">顧客掃描 QR Code 後，即可在此頁面點餐。</p>
+        </div>
+
+        <div class="menu-footer">
+            <p>※ 價格單位：新台幣 (元) ※</p>
+            <p>※ 請調整數量後確認總金額 ※</p>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript 函數：更改數量
+        function changeQuantity(button, change) {
+            const quantityDiv = button.closest('.item-quantity'); // 找到包含按鈕的 div
+            const input = quantityDiv.querySelector('input[type="number"]'); // 找到數量輸入框
+            let currentValue = parseInt(input.value, 10); // 取得目前數量 (轉成整數)
+            let newValue = currentValue + change; // 計算新數量
+
+            // 確保數量不小於 0
+            if (newValue < 0) {
+                newValue = 0;
+            }
+
+            input.value = newValue; // 更新輸入框的值
+            updateTotal(); // 更新總金額
+        }
+
+        // JavaScript 函數：更新總金額
+        function updateTotal() {
+            let total = 0; // 初始化總金額
+            const items = document.querySelectorAll('.menu-item'); // 取得所有菜單項目
+
+            items.forEach(item => {
+                const price = parseFloat(item.getAttribute('data-price')); // 取得單價
+                const quantityInput = item.querySelector('input[type="number"]'); // 取得數量輸入框
+                const checkbox = item.querySelector('input[type="checkbox"]'); // 取得核取方塊 (特殊選項用)
+
+                if (quantityInput) {
+                     // 一般項目：計算數量 * 單價
+                    const quantity = parseInt(quantityInput.value, 10); // 取得數量
+                    if (!isNaN(price) && !isNaN(quantity) && quantity > 0) {
+                        total += price * quantity; // 累加金額
+                    }
+                } else if (checkbox && checkbox.checked) {
+                    // 特殊選項：如果勾選，加上其價格
+                     if (!isNaN(price)) {
+                        total += price;
+                    }
+                }
+            });
+
+            // 更新顯示總金額的元素
+            const totalAmountElement = document.getElementById('total-amount');
+            totalAmountElement.textContent = `$${total}元`; // 格式化顯示
+        }
+
+        // 頁面載入時先計算一次總金額 (雖然初始都是 0)
+        document.addEventListener('DOMContentLoaded', updateTotal);
+    </script>
+</body>
+</html>
